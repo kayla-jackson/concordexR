@@ -13,7 +13,10 @@ The goal of concordexR is to replace UMAP as a clustering diagnostic.
 
 ## Installation
 
-You can install the development version of concordexR from
+This repository is not maintained. It has been moved to 
+[https://github.com/pachterlab/concordexR](https://github.com/pachterlab/concordexR).
+
+You can install the development version of concordexR from 
 [GitHub](https://github.com/) with:
 
 ``` r
