@@ -23,6 +23,16 @@ neighborhood graph and observation labels."><!-- mathjax --><script src="https:/
       <ul class="navbar-nav me-auto"><li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
 </li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/nomap-demo.html">Using nomap in place of UMAP in scRNA-seq</a>
+    <a class="dropdown-item" href="../articles/overview.html">Overview of nomapR</a>
+  </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="../news/index.html">Changelog</a>
+</li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
@@ -54,7 +64,14 @@ neighborhood graph and observation labels.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calculateNomap</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for ANY</span></span>
-<span><span class="fu">calculateNomap</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">calculateNomap</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">labels</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>  n.iter <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>  return.map <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  BPPARAM <span class="op">=</span> <span class="fu">SerialParam</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -62,7 +79,13 @@ neighborhood graph and observation labels.</p>
     <dl><dt>x</dt>
 <dd><p>A numeric matrix specifying the neighborhood structure of
 observations. Typically an adjacency matrix produced by a k-Nearest
-Neighbor algorithm.</p></dd>
+Neighbor algorithm. It can also be a matrix whose rows correspond to each
+observation and columns correspond to neighbor indices, i.e. matrix form of
+an adjacency list which can be a matrix due to fixed number of neighbors.</p></dd>
+
+
+<dt>...</dt>
+<dd><p>Arguments passed to methods.</p></dd>
 
 
 <dt>labels</dt>
@@ -121,56 +144,68 @@ cells of each label. Only returned when <code>return.map = TRUE</code>.</p></dd>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Simplest case where input is a nxn matrix</span></span></span>
 <span class="r-in"><span><span class="co"># Neighbors can be oriented along the rows or columns</span></span></span>
-<span class="r-in"><span><span class="va">ncells</span> <span class="op">&lt;-</span> <span class="fl">10</span></span></span>
+<span class="r-in"><span><span class="va">nCells</span> <span class="op">&lt;-</span> <span class="fl">10</span></span></span>
 <span class="r-in"><span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fl">3</span></span></span>
-<span class="r-in"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"l"</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>, <span class="va">ncells</span>, replace<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"l"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span>, <span class="va">nCells</span>, replace<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ncells</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="va">ncells</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">out</span><span class="op">[</span><span class="op">-</span><span class="va">x</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="va">k</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">ncells</span><span class="op">-</span><span class="va">k</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="va">out</span></span></span>
+<span class="r-in"><span><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">nCells</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">nCells</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">out</span><span class="op">[</span><span class="op">-</span><span class="va">x</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">k</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">nCells</span> <span class="op">-</span> <span class="va">k</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="va">out</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">calculateNomap</span><span class="op">(</span><span class="va">mtx</span>, <span class="va">labels</span>, k<span class="op">=</span><span class="va">k</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">calculateNomap</span><span class="op">(</span><span class="va">mtx</span>, <span class="va">labels</span>, k <span class="op">=</span> <span class="va">k</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nomap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3119048</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2091503</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mean_random_nomap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2721393</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2791711</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $corrected_trace</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.146122</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7491833</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $simulated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.2847222 0.3164488 0.2862319 0.1587302 0.1818182 0.2738095 0.2083333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 0.3633041 0.2098039 0.2862319 0.3140097 0.2717391 0.2253968 0.3973430</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] 0.3041667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.2653509 0.2679739 0.3166667 0.2805556 0.2070175 0.2333333 0.3363095</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 0.2653509 0.2996032 0.2710623 0.3277778 0.3333333 0.2629630 0.2968254</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] 0.2234432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $map</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           l1        l2         l3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> l1 0.2941176 0.4117647 0.00000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> l2 0.8333333 0.3333333 0.08333333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> l3 2.0000000 1.0000000 0.00000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Also works if input matrix is nxk or kxn</span></span></span>
-<span class="r-in"><span><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ncells</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">ncells</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="va">x</span><span class="op">]</span>, <span class="va">k</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">nCells</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">nCells</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="va">x</span><span class="op">]</span>, <span class="va">k</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">out</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">calculateNomap</span><span class="op">(</span><span class="va">mtx</span>, <span class="va">labels</span>, k<span class="op">=</span><span class="va">k</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">calculateNomap</span><span class="op">(</span><span class="va">mtx</span>, <span class="va">labels</span>, k <span class="op">=</span> <span class="va">k</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">res</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nomap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3518519</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3068182</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mean_random_nomap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2607794</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2463601</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $corrected_trace</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.349232</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.245405</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $simulated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.2222222 0.1754386 0.2827381 0.2922559 0.2796452 0.2000000 0.2000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 0.1666667 0.3703704 0.3384687 0.3518519 0.2516340 0.3063910 0.2351190</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] 0.2388889</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.3431373 0.2679739 0.2581197 0.2371795 0.1412037 0.2820513 0.2063492</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] 0.2236842 0.2087542 0.2708333 0.2740385 0.1470085 0.2401961 0.2948718</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] 0.3000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $map</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           l1        l2        l3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> l1 0.3750000 0.3125000 0.0625000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> l2 0.6363636 0.5454545 0.1818182</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> l3 1.0000000 0.0000000 0.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>
