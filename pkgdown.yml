@@ -2,7 +2,7 @@ pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
-  nomap-demo: nomap-demo.html
+  concordex-demo: concordex-demo.html
   overview: overview.html
-last_built: 2023-03-31T15:34Z
+last_built: 2023-03-31T20:18Z
 
